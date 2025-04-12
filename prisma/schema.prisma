@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  fullName    String    @map("full_name")
+  email       String    @unique
+  role        String
+  department  String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  inspections Inspection[] @relation("Inspector")
+  issuesRaised Issue[]     @relation("RaisedBy")
+  tasks       Task[]       @relation("AssignedTo")
+  comments    Comment[]
+
+  @@map("users")
+}
+
+model Resort {
+  id          Int        @id @default(autoincrement())
+  name        String
+  location    String?
+  description String?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  checklists  Checklist[]
+
+  @@map("resorts")
+}
+
+model Checklist {
+  id          Int        @id @default(autoincrement())
+  resortId    Int?
+  category    String
+  title       String
+  description String?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  resort      Resort?    @relation(fields: [resortId], references: [id], onDelete: Cascade)
+  inspections Inspection[]
+
+  @@map("checklists")
+}
+
+model Inspection {
+  id             Int        @id @default(autoincrement())
+  checklistId    Int?
+  inspectorId    Int?
+  inspectionDate DateTime   @default(now()) @map("inspection_date")
+  notes          String?
+  status         String     @default("pending")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  checklist      Checklist? @relation(fields: [checklistId], references: [id], onDelete: SetNull)
+  inspector      User?      @relation("Inspector", fields: [inspectorId], references: [id], onDelete: SetNull)
+  issues         Issue[]
+
+  @@map("inspections")
+}
+
+model Issue {
+  id          Int        @id @default(autoincrement())
+  inspectionId Int
+  title       String
+  description String?
+  priority    String     @default("normal")
+  status      String     @default("open")
+  raisedById  Int?       @map("raised_by")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @default(now()) @map("updated_at")
+  inspection  Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  raisedBy    User?      @relation("RaisedBy", fields: [raisedById], references: [id], onDelete: SetNull)
+  media       Media[]
+  tasks       Task[]
+  comments    Comment[]
+
+  @@map("issues")
+}
+
+model Media {
+  id         Int      @id @default(autoincrement())
+  issueId    Int
+  fileUrl    String   @map("file_url")
+  mediaType  String   @map("media_type")
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+  issue      Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@map("media")
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  issueId     Int
+  assignedToId Int?     @map("assigned_to")
+  description String
+  status      String   @default("open")
+  dueDate     DateTime?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+  issue       Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  assignedTo  User?    @relation("AssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@map("tasks")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  issueId   Int
+  userId    Int?
+  comment   String
+  createdAt DateTime @default(now()) @map("created_at")
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("comments")
+}
