@@ -1,5 +1,6 @@
 # Digitizing-Resort-Inspections-Checklist-Management-Hackhthone
-problem statment 
+problem statment :
+
 Digitizing Resort Inspections & Checklist Management
 How can we develop a digital tool to simplify and standardize inspections, allowing managers and directors to efficiently collect, track, and act on operational and physical maintenance issues across Kuriftu's resorts?
 
